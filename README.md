@@ -15,7 +15,7 @@ A RESTful API-driven platform that allows developers and teams to post code snip
 - [API Endpoints](#api-endpoints)
 - [Authentication](#authentication)
 - [Postman Usage](#postman-usage)
-- [License](#license)
+
 
 ---
 
