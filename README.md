@@ -1,144 +1,156 @@
 # Collaborative Code Review Platform
 
-A RESTful API-driven platform that enables developers and teams to post code snippets, request feedback, and collaborate on reviews in real-time. Built with **Node.js**, **TypeScript**, **Express**, and **PostgreSQL**, this platform simplifies the peer review process.
+A RESTful API-driven platform that allows developers and teams to post code snippets, request feedback, and collaborate on reviews in real-time. Built with **Node.js, TypeScript, Express, and PostgreSQL**, this platform simplifies the peer review process.
 
 ---
 
-## ✅ Features
+## Table of Contents
+- [Project Overview](#project-overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Setup Instructions](#setup-instructions)
+- [Database Setup](#database-setup)
+- [Environment Variables](#environment-variables)
+- [Running the Project](#running-the-project)
+- [API Endpoints](#api-endpoints)
+- [Authentication](#authentication)
+- [Postman Usage](#postman-usage)
 
-- Authentication & User Management (JWT)
-  - Register, login, roles: `submitter`, `reviewer`, `admin`
-  - Profile management
-- Projects / Repositories
-  - Create projects, add/remove members
-- Code Submissions
-  - Upload text snippets / files (text only)
-  - Track status: `pending`, `in_review`, `approved`, `changes_requested`
-- Comments
-  - Inline (line number) + general comments
-  - CRUD (with permissions)
-- Review Workflow
-  - Approve or request changes; review history tracking
-- Notifications & Real-time
-  - Activity feed endpoint + WebSocket notifications
-- Analytics
-  - Project-level stats (avg review time, approval rates, most commented submission)
 
 ---
 
-## 📦 Project Structure (example)
+## Project Overview
 
-collab-code-review/
-│
-├─ src/
-│ ├─ controllers/
-│ ├─ middleware/
-│ ├─ routes/
-│ ├─ db.ts
-│ ├─ app.ts
-│ └─ server.ts
-├─ sql/
-│ └─ schema.sql
-├─ postman/
-│ └─ collection.json
-├─ .env.example
-├─ package.json
-└─ README.md
+The Collaborative Code Review Platform enables:
 
-yaml
-Copy code
+- Uploading code snippets or files.
+- Requesting reviews from team members.
+- Adding inline and general comments.
+- Tracking review status (`pending`, `in_review`, `approved`, `changes_requested`).
+- Real-time notifications via WebSockets.
+- Project-level analytics.
 
 ---
 
-## ⚙️ Quick Setup (local dev)
+## Features
 
-### 1. Clone repository
+- **User Authentication & Management**
+  - Register & login with JWT authentication.
+  - Role-based access: `submitter`, `reviewer`.
+  - Profile management.
+
+- **Projects / Repositories**
+  - Create, list, and manage projects.
+  - Assign or remove members.
+
+- **Code Submissions**
+  - Upload snippets or files.
+  - Track status and history.
+
+- **Comments**
+  - Inline or general comments.
+  - CRUD operations (Submitters cannot comment).
+
+- **Review Workflow**
+  - Approve or request changes on submissions.
+  - Track review history.
+
+- **Notifications & Analytics**
+  - Activity feed for users.
+  - Project statistics (average review time, most commented submissions).
+
+---
+
+## Tech Stack
+
+- Node.js + TypeScript  
+- Express.js  
+- PostgreSQL  
+- `pg` / `pg-pool` for DB connections  
+- JWT for authentication  
+- WebSockets for real-time updates  
+
+---
+
+## Setup Instructions
+
+### Clone the repository
 ```bash
-git clone https://github.com/your-username/collab-code-review.git
-cd collab-code-review
-2. Install dependencies
+git clone https://github.com/your-username/collab-code-review-platform.git
+cd collab-code-review-platform
+Install dependencies
 bash
 Copy code
 npm install
-3. Create .env (see below)
-Copy .env.example → .env and fill values.
+Create .env file
+See Environment Variables.
 
-4. Create database & run schema
-Use pgAdmin or psql to create DB and run sql/schema.sql:
+Run the development server
+bash
+Copy code
+npm run dev
+API server runs on: http://localhost:4000
+
+WebSocket server runs on: ws://localhost:4050
+
+Database Setup
+Create a new PostgreSQL database:
 
 sql
 Copy code
 CREATE DATABASE collab_review;
--- then in psql or pgAdmin run:
-\i sql/schema.sql
-5. Start dev server
-bash
+Run the provided schema.sql file in pgAdmin or psql:
+
+sql
 Copy code
-npm run dev
-API: http://localhost:4000
+\i sql/schema.sql
+This will create tables:
 
-WebSocket: ws://localhost:4050
+users
 
-🗄️ Database (quick overview)
-sql/schema.sql should create these main tables:
+projects
 
-users — id, name, email, password (hashed), role, avatar_url, created_at
+submissions
 
-projects — id, name, description, created_by, created_at
+comments
 
-project_members — project_id, user_id, role
+reviews
 
-submissions — id, project_id, title, content, filename, status, submitter_id, timestamps
+(Optional) Insert seed data for testing.
 
-comments — id, submission_id, author_id, body, line_number, timestamps
-
-reviews — id, submission_id, reviewer_id, action, comment, created_at
-
-notifications — id, user_id, payload, read, created_at
-
-(Use the scaffold sql/schema.sql included in the repo.)
-
-🔐 Environment Variables (.env)
-Create .env in project root (example):
+Environment Variables
+Create a .env file in the root directory:
 
 env
 Copy code
 PORT=4000
 WS_PORT=4050
+JWT_SECRET=your_jwt_secret_key
 DATABASE_URL=postgresql://postgres:YourPassword@localhost:5432/collab_review
-JWT_SECRET=replace_with_a_strong_secret
-Replace YourPassword and JWT_SECRET with your values. Do not commit .env to Git.
+Replace YourPassword with your PostgreSQL password.
 
-▶️ Run & Dev commands
-Dev (auto-reload): npm run dev
+Running the Project
+Start the dev server:
 
-Build: npm run build
-
-Start (production): npm start
-
-🧪 Seed data (optional)
-You can create accounts via the API (recommended). If you prefer SQL seeds, create entries for projects and submissions after registering users, replacing <USER_UUID> with real user IDs:
-
-sql
+bash
 Copy code
-INSERT INTO projects (id, name, description, created_by) VALUES ('11111111-1111-1111-1111-111111111111','Demo Project','Seed project', '<USER_UUID>');
+npm run dev
+Open Postman to test endpoints.
+Use your JWT token for protected routes.
 
-INSERT INTO submissions (id, project_id, title, content, filename, submitter_id) VALUES ('22222222-2222-2222-2222-222222222222','11111111-1111-1111-1111-111111111111','Sample Submission','console.log(\"hi\")','sample.js','<USER_UUID>');
-📬 API Endpoints & Examples
-All endpoints are prefixed with /api. Use Authorization: Bearer <token> header for protected routes.
-
-AUTHENTICATION
-Register
+API Endpoints
+Authentication
+Register User
 http
 Copy code
 POST /api/auth/register
-Request body
+Request Body
 
 json
 Copy code
 {
-  "name": "Alice",
-  "email": "alice@example.com",
+  "name": "John Doe",
+  "email": "john@example.com",
   "password": "password123",
   "role": "submitter"
 }
@@ -148,20 +160,20 @@ json
 Copy code
 {
   "id": "uuid",
-  "name": "Alice",
-  "email": "alice@example.com",
+  "name": "John Doe",
+  "email": "john@example.com",
   "role": "submitter"
 }
 Login
 http
 Copy code
 POST /api/auth/login
-Request body
+Request Body
 
 json
 Copy code
 {
-  "email": "alice@example.com",
+  "email": "john@example.com",
   "password": "password123"
 }
 Response (200)
@@ -169,233 +181,181 @@ Response (200)
 json
 Copy code
 {
-  "token": "eyJ...your.jwt.token..."
+  "token": "jwt-token-string"
 }
-USERS
-(If you implement user CRUD, these are the expected endpoints)
-
-Get all users
+Users
+Get All Users
 http
 Copy code
 GET /api/users
-Get user
+Get User by ID
 http
 Copy code
 GET /api/users/:id
-Update user
+Update User
 http
 Copy code
 PUT /api/users/:id
-Request body
+Request Body
 
 json
 Copy code
 {
-  "name": "Alice New",
-  "email": "alice.new@example.com",
-  "avatar_url": "https://..."
+  "name": "John Updated",
+  "email": "john_updated@example.com"
 }
-Delete user
+Delete User
 http
 Copy code
 DELETE /api/users/:id
-PROJECTS
-Create project
+Projects
+Create Project
 http
 Copy code
 POST /api/projects
-Request body
+Request Body
 
 json
 Copy code
 {
   "name": "My Project",
-  "description": "A project for review"
+  "description": "Sample project"
 }
-Response (201): created project object.
-
-List projects
+List All Projects
 http
 Copy code
 GET /api/projects
-Add project member
+Add Member to Project
 http
 Copy code
 POST /api/projects/:id/members
-Request body
+Request Body
 
 json
 Copy code
 {
-  "userId": "uuid-of-user",
-  "role": "reviewer"
+  "userId": "uuid"
 }
-Remove project member
+Remove Member
 http
 Copy code
 DELETE /api/projects/:id/members/:userId
-SUBMISSIONS
-Create submission
+Submissions
+Create Submission
 http
 Copy code
 POST /api/submissions
-Request body (note project_id matches DB column)
+Request Body
 
 json
 Copy code
 {
-  "project_id": "project-uuid",
-  "title": "Refactor auth",
-  "content": "function login() { ... }",
-  "filename": "auth.js"
+  "projectId": "uuid",
+  "title": "Login Fix",
+  "content": "const x = 10;"
 }
-Response (201): submission object
-
-List submissions for a project
+List Submissions by Project
 http
 Copy code
 GET /api/projects/:id/submissions
-(If your code uses GET /api/submissions/project/:id use that route — adjust README to match your code.)
-
-Get single submission
+Get Submission by ID
 http
 Copy code
 GET /api/submissions/:id
-Update submission status (approve/request)
+Update Submission Status
 http
 Copy code
-PATCH /api/submissions/:id/status
-Request body
+PUT /api/submissions/:id/status
+Request Body
 
 json
 Copy code
 {
   "status": "in_review"
 }
-Delete submission
+Delete Submission
 http
 Copy code
 DELETE /api/submissions/:id
-COMMENTS
-Add comment (inline or general)
+Comments
+Add Comment
 http
 Copy code
 POST /api/submissions/:id/comments
-Request body (inline comment)
+Request Body
 
 json
 Copy code
 {
-  "body": "Please rename this variable for clarity.",
-  "line_number": 42
+  "line": 5,
+  "text": "Consider renaming this variable."
 }
-Request body (general comment)
-
-json
-Copy code
-{
-  "body": "Overall this looks good."
-}
-List comments for submission
+List Comments
 http
 Copy code
 GET /api/submissions/:id/comments
-Update comment
+Update Comment
 http
 Copy code
-PATCH /api/comments/:id
-Request body
+PUT /api/comments/:id
+Request Body
 
 json
 Copy code
 {
-  "body": "Updated comment text"
+  "text": "Updated comment"
 }
-Delete comment
+Delete Comment
 http
 Copy code
 DELETE /api/comments/:id
-REVIEW WORKFLOW
-Approve a submission
+Review Workflow
+Approve Submission
 http
 Copy code
 POST /api/submissions/:id/approve
-Response
-
-json
-Copy code
-{ "ok": true }
-Request changes
+Request Changes
 http
 Copy code
 POST /api/submissions/:id/request-changes
-Request body
-
-json
-Copy code
-{
-  "comment": "Please update tests and address edge-case X"
-}
-Get review history
+Get Review History
 http
 Copy code
 GET /api/submissions/:id/reviews
-NOTIFICATIONS & STATS
-User activity feed
+Notifications & Stats
+User Activity Feed
 http
 Copy code
 GET /api/users/:id/notifications
-Project stats
+Project Stats
 http
 Copy code
 GET /api/projects/:id/stats
-Example response (project stats)
+Authentication
+Most endpoints require a JWT token.
 
-json
+After logging in, copy the token value.
+
+In Postman, go to:
+
+Authorization → Bearer Token
+
+Paste the token.
+
+Example:
+
+makefile
 Copy code
-{
-  "projectId": "uuid",
-  "totalSubmissions": 23,
-  "avgReviewTimeSeconds": 4320,
-  "approvedCount": 12,
-  "changesRequestedCount": 6
-}
-🔁 WebSockets (Real-time)
-WS server listens (default) at: ws://localhost:4050
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
+Postman Usage
+Import the Postman collection (if available).
 
-Clients can connect and optionally subscribe to project updates. Example client message:
+Register a user → /api/auth/register.
 
-json
-Copy code
-{ "type": "subscribe", "projectId": "project-uuid" }
-Server pushes notifications like:
+Login to get a JWT token → /api/auth/login.
 
-json
-Copy code
-{ "type": "submission_reviewed", "submissionId": "...", "status": "approved" }
-🧾 Error Responses
-400 Bad Request — invalid/missing fields
+Use that token for all other requests (Authorization tab → Bearer Token).
 
-json
-Copy code
-{ "error": "Missing required field: title" }
-401 Unauthorized — missing/invalid token
+Test CRUD endpoints (Users, Projects, Submissions, Comments).
 
-json
-Copy code
-{ "error": "Missing authorization header" }
-403 Forbidden — insufficient role/permission
 
-json
-Copy code
-{ "error": "Forbidden" }
-404 Not Found — resource not found
-
-json
-Copy code
-{ "error": "Submission not found" }
-500 Internal Server Error — unexpected failure
-
-json
-Copy code
-{ "error": "Internal server error" }
